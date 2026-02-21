@@ -39,7 +39,7 @@ button {margin-top:10px; padding:5px 10px; cursor:pointer;}
   <h1>🍕 PizzaDayToken Snake</h1>
   <div class="info-bar">Score: <span id="score">0</span> | Level: <span id="level">1</span> | Tokens: <span id="tokens">0</span></div>
   <canvas id="game" width="600" height="600"></canvas>
-  <button onclick="startGame()">Start Game</button>
+  <button id="startBtn" onclick="startGame()">Start Game</button>
 
   <div class="controls">
     <button class="arrow-btn" onclick="setDirection('UP')">⬆</button>
@@ -61,16 +61,20 @@ button {margin-top:10px; padding:5px 10px; cursor:pointer;}
 
 <script>
 // --- Social Gate ---
-const twitterUrl = "https://twitter.com/USERNAME_KAMU";
-const telegramUrl = "https://t.me/USERNAME_KAMU";
+const twitterUrl = "https://x.com/PizzaDayT0ken";
+const telegramUrl = "https://t.me/PizzaDayToken";
+
 function openTwitter(){ window.open(twitterUrl,"_blank"); }
 function openTelegram(){ window.open(telegramUrl,"_blank"); }
+
 document.getElementById("confirmCheck").addEventListener("change", function(){
   document.getElementById("unlockBtn").disabled = !this.checked;
 });
+
 function unlockGame(){
   document.getElementById("gateScreen").style.display="none";
   document.getElementById("gameContainer").style.display="block";
+  document.getElementById("startBtn").style.display="inline-block";
 }
 
 // --- Snake Game ---
