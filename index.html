@@ -2,56 +2,57 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>PizzaDayToken Snake + Leaderboard 1k</title>
+<title>PizzaDayToken Snake + Token & Social Gate</title>
 <style>
-body {
-  margin: 0;
-  background: #111;
-  color: white;
-  font-family: Arial, sans-serif;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 20px;
-}
-.game-container { position: relative; margin-bottom: 20px; }
-canvas { background: #222; border: 3px solid orange; display: block; }
-.controls { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
-.arrow-btn {
-  width: 60px; height: 60px; background: orange; border: none; color: white;
-  font-size: 24px; border-radius: 50%; cursor: pointer;
-  display: flex; justify-content: center; align-items: center;
-  font-weight: bold; transition: transform 0.1s, background 0.2s;
-}
-.arrow-btn:hover { background: #ff9900; transform: scale(1.1); }
-.info-bar { text-align: center; margin-bottom: 10px; color: white; }
-.leaderboard { margin-top: 20px; width: 300px; }
-.leaderboard h2 { margin-bottom: 5px; }
-.leaderboard ol { padding-left: 20px; }
-button { margin-top: 10px; padding: 5px 10px; cursor: pointer; }
+body {margin:0; background:#111; color:white; font-family:Arial; display:flex; justify-content:center; gap:40px; padding-top:20px;}
+#gateScreen {text-align:center; margin-bottom:20px;}
+#gateScreen button {margin:5px; padding:10px 15px; cursor:pointer; background:orange; border:none; color:white; border-radius:5px; font-size:16px;}
+#unlockBtn {background:green;}
+.game-container {position:relative; display:none;}
+canvas {background:#222; border:3px solid orange; display:block;}
+.controls {display:flex; flex-direction:column; gap:10px; position:absolute; right:-120px; top:50%; transform:translateY(-50%);}
+.arrow-btn {width:60px; height:60px; background:orange; border:none; color:white; font-size:24px; border-radius:50%; cursor:pointer; display:flex; justify-content:center; align-items:center; font-weight:bold; transition:0.1s;}
+.arrow-btn:hover {background:#ff9900; transform:scale(1.1);}
+.info-bar {text-align:center; margin-bottom:10px; color:white;}
+.leaderboard {margin-top:20px; width:300px;}
+.leaderboard h2 {margin-bottom:5px;}
+.leaderboard ol {padding-left:20px;}
+button {margin-top:10px; padding:5px 10px; cursor:pointer;}
 </style>
 </head>
 <body>
 
-<h1>🍕 PizzaDayToken Snake</h1>
+<!-- Gate Screen -->
+<div id="gateScreen">
+  <h2>🔒 Unlock Game</h2>
+  <p>Untuk main game, kamu harus:</p>
+  <button onclick="openTwitter()">Follow Twitter</button>
+  <button onclick="openTelegram()">Join Telegram</button>
+  <br><br>
+  <label><input type="checkbox" id="confirmCheck"> Saya sudah follow & join</label>
+  <br><br>
+  <button id="unlockBtn" onclick="unlockGame()" disabled>Mainkan Game</button>
+</div>
 
-<div class="info-bar">Score: <span id="score">0</span> | Level: <span id="level">1</span> | Tokens: <span id="tokens">0</span></div>
-
-<div class="game-container">
+<!-- Game -->
+<div class="game-container" id="gameContainer">
+  <h1>🍕 PizzaDayToken Snake</h1>
+  <div class="info-bar">Score: <span id="score">0</span> | Level: <span id="level">1</span> | Tokens: <span id="tokens">0</span></div>
   <canvas id="game" width="600" height="600"></canvas>
+  <button onclick="startGame()">Start Game</button>
+
   <div class="controls">
     <button class="arrow-btn" onclick="setDirection('UP')">⬆</button>
     <button class="arrow-btn" onclick="setDirection('LEFT')">⬅</button>
     <button class="arrow-btn" onclick="setDirection('DOWN')">⬇</button>
     <button class="arrow-btn" onclick="setDirection('RIGHT')">➡</button>
   </div>
-  <button onclick="startGame()">Start Game</button>
-</div>
 
-<div class="leaderboard">
-  <h2>Leaderboard</h2>
-  <ol id="leaderboardList"></ol>
-  <button onclick="convertPointsToTokens()">Tukar Poin → Token</button>
+  <div class="leaderboard">
+    <h2>Leaderboard</h2>
+    <ol id="leaderboardList"></ol>
+    <button onclick="convertPointsToTokens()">Tukar Poin → Token</button>
+  </div>
 </div>
 
 <audio id="eatSound" src="https://www.soundjay.com/button/sounds/button-16.mp3" preload="auto"></audio>
@@ -59,40 +60,47 @@ button { margin-top: 10px; padding: 5px 10px; cursor: pointer; }
 <audio id="bgMusic" src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" loop autoplay></audio>
 
 <script>
+// --- Social Gate ---
+const twitterUrl = "https://twitter.com/USERNAME_KAMU";
+const telegramUrl = "https://t.me/USERNAME_KAMU";
+function openTwitter(){ window.open(twitterUrl,"_blank"); }
+function openTelegram(){ window.open(telegramUrl,"_blank"); }
+document.getElementById("confirmCheck").addEventListener("change", function(){
+  document.getElementById("unlockBtn").disabled = !this.checked;
+});
+function unlockGame(){
+  document.getElementById("gateScreen").style.display="none";
+  document.getElementById("gameContainer").style.display="block";
+}
+
+// --- Snake Game ---
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 const box = 20;
 const pizzaSize = 40;
 
 let snake, food, score, direction, speed, game, level;
-let mouthOpen = false;
-let tokens = 0;
+let mouthOpen=false;
+let tokens=0;
 
-// Load leaderboard dari localStorage
+// Leaderboard
 let leaderboard = JSON.parse(localStorage.getItem("pdtLeaderboard") || "[]");
 updateLeaderboardDisplay();
 
-function startGame() {
-  snake = [{x: 300, y: 300}];
-  food = randomFood();
-  score = 0;
-  level = 1;
-  direction = "RIGHT";
-  speed = 300;
-  mouthOpen = false;
-  document.getElementById("score").innerText = score;
-  document.getElementById("level").innerText = level;
-  document.getElementById("tokens").innerText = tokens;
-
-  const bgMusic = document.getElementById("bgMusic");
-  bgMusic.volume = 0.3;
-  bgMusic.play();
-
+function startGame(){
+  snake=[{x:300,y:300}];
+  food=randomFood();
+  score=0; level=1; direction="RIGHT"; speed=500; mouthOpen=false;
+  document.getElementById("score").innerText=score;
+  document.getElementById("level").innerText=level;
+  document.getElementById("tokens").innerText=tokens;
+  const bgMusic=document.getElementById("bgMusic");
+  bgMusic.volume=0.3; bgMusic.play();
   clearInterval(game);
-  game = setInterval(draw, speed);
+  game=setInterval(draw,speed);
 }
 
-function setDirection(dir) {
+function setDirection(dir){
   if(dir==="LEFT" && direction!=="RIGHT") direction="LEFT";
   if(dir==="UP" && direction!=="DOWN") direction="UP";
   if(dir==="RIGHT" && direction!=="LEFT") direction="RIGHT";
@@ -107,93 +115,75 @@ window.addEventListener("keydown", e=>{
   if(e.key==="ArrowDown"&&direction!=="UP") direction="DOWN";
 });
 
-function randomFood(){ 
-  const maxX = canvas.width/box;
-  const maxY = canvas.height/box;
-  return { x: Math.floor(Math.random()*maxX)*box, y: Math.floor(Math.random()*maxY)*box }; 
+function randomFood(){
+  const maxX=canvas.width/box; const maxY=canvas.height/box;
+  return {x:Math.floor(Math.random()*maxX)*box, y:Math.floor(Math.random()*maxY)*box};
 }
 
 function draw(){
-  ctx.fillStyle="#222";
-  ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle="#222"; ctx.fillRect(0,0,canvas.width,canvas.height);
 
-  for(let i=1;i<snake.length;i++){
-    ctx.fillStyle="green";
-    ctx.fillRect(snake[i].x,snake[i].y,box,box);
-  }
+  for(let i=1;i<snake.length;i++){ ctx.fillStyle="green"; ctx.fillRect(snake[i].x,snake[i].y,box,box); }
 
-  ctx.font = box + "px Arial";
-  const headEmoji = mouthOpen ? "😋" : "🧑";
+  ctx.font=box+"px Arial"; const headEmoji=mouthOpen?"😋":"🧑";
   ctx.fillText(headEmoji,snake[0].x+2,snake[0].y+box-2);
 
-  ctx.font = pizzaSize + "px Arial";
-  ctx.fillText("🍕",food.x+2,food.y+pizzaSize-10);
+  ctx.font=pizzaSize+"px Arial"; ctx.fillText("🍕",food.x+2,food.y+pizzaSize-10);
 
-  let headX = snake[0].x;
-  let headY = snake[0].y;
-
+  let headX=snake[0].x, headY=snake[0].y;
   if(direction==="LEFT") headX-=box;
   if(direction==="UP") headY-=box;
   if(direction==="RIGHT") headX+=box;
   if(direction==="DOWN") headY+=box;
 
   if(headX<0||headX>=canvas.width||headY<0||headY>=canvas.height||snake.some(seg=>seg.x===headX&&seg.y===headY)){
-    clearInterval(game);
-    document.getElementById("dieSound").play();
+    clearInterval(game); document.getElementById("dieSound").play();
     alert("Game Over! Score: "+score);
 
-    // Simpan ke leaderboard hanya jika kelipatan 1000
-    if(score >= 1000){
-      const roundedScore = Math.floor(score / 1000) * 1000;
+    // simpan skor kelipatan 1000
+    if(score>=1000){
+      const roundedScore = Math.floor(score/1000)*1000;
       saveScore(roundedScore);
       updateLeaderboardDisplay();
     }
     return;
   }
 
-  snake.unshift({x: headX,y: headY});
+  snake.unshift({x:headX,y:headY});
 
   if(headX===food.x && headY===food.y){
     score+=10;
-    document.getElementById("score").innerText = score;
-    food=randomFood();
-    mouthOpen=true;
-    document.getElementById("eatSound").play();
-
+    document.getElementById("score").innerText=score;
+    food=randomFood(); mouthOpen=true; document.getElementById("eatSound").play();
     if(speed>80){ speed-=5; clearInterval(game); game=setInterval(draw,speed); }
     if(score%50===0){ level+=1; document.getElementById("level").innerText=level; }
-
     setTimeout(()=>{ mouthOpen=false; },200);
   }else{ mouthOpen=false; snake.pop(); }
 }
 
-// ----- Leaderboard & Token -----
+// --- Leaderboard & Token ---
 function saveScore(score){
-  leaderboard.push({score, date: new Date().toISOString()});
+  leaderboard.push({score,date:new Date().toISOString()});
   leaderboard.sort((a,b)=>b.score-a.score);
-  if(leaderboard.length>10) leaderboard = leaderboard.slice(0,10);
-  localStorage.setItem("pdtLeaderboard", JSON.stringify(leaderboard));
+  if(leaderboard.length>10) leaderboard=leaderboard.slice(0,10);
+  localStorage.setItem("pdtLeaderboard",JSON.stringify(leaderboard));
 }
 
 function updateLeaderboardDisplay(){
-  const list = document.getElementById("leaderboardList");
+  const list=document.getElementById("leaderboardList");
   list.innerHTML="";
-  leaderboard.forEach(item=>{
-    list.innerHTML += `<li>${item.score} pts</li>`;
-  });
+  leaderboard.forEach(item=>{ list.innerHTML+=`<li>${item.score} pts</li>`; });
 }
 
 function convertPointsToTokens(){
-  const earnedTokens = Math.floor(score / 1000);
-  if(earnedTokens > 0){
-    tokens += earnedTokens;
-    score -= earnedTokens*1000;
-    document.getElementById("tokens").innerText = tokens;
-    document.getElementById("score").innerText = score;
+  const earnedTokens=Math.floor(score/1000);
+  if(earnedTokens>0){
+    tokens+=earnedTokens;
+    score-=earnedTokens*1000;
+    document.getElementById("tokens").innerText=tokens;
+    document.getElementById("score").innerText=score;
     alert(`Selamat! Kamu mendapatkan ${earnedTokens} PizzadayToken!`);
-  } else {
-    alert("Poin belum cukup untuk ditukar. (1000 poin = 1 token)");
-  }
+  }else{ alert("Poin belum cukup untuk ditukar. (1000 poin = 1 token)"); }
 }
 </script>
 
