@@ -2,9 +2,9 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>PizzaDayToken Snake + Token & Social Gate</title>
+<title>PizzaDayToken Snake - Final Version</title>
 <style>
-body {margin:0; background:#111; color:white; font-family:Arial; display:flex; justify-content:center; gap:40px; padding-top:20px;}
+body {margin:0; background:#111; color:white; font-family:Arial, sans-serif; display:flex; justify-content:center; gap:40px; padding-top:20px;}
 #gateScreen {text-align:center; margin-bottom:20px;}
 #gateScreen button {margin:5px; padding:10px 15px; cursor:pointer; background:orange; border:none; color:white; border-radius:5px; font-size:16px;}
 #unlockBtn {background:green;}
@@ -144,10 +144,9 @@ function draw(){
     clearInterval(game); document.getElementById("dieSound").play();
     alert("Game Over! Score: "+score);
 
-    // simpan skor kelipatan 1000
-    if(score>=1000){
-      const roundedScore = Math.floor(score/1000)*1000;
-      saveScore(roundedScore);
+    // simpan skor mulai 100 poin
+    if(score>=100){
+      saveScore(score);
       updateLeaderboardDisplay();
     }
     return;
@@ -167,10 +166,12 @@ function draw(){
 
 // --- Leaderboard & Token ---
 function saveScore(score){
-  leaderboard.push({score,date:new Date().toISOString()});
-  leaderboard.sort((a,b)=>b.score-a.score);
-  if(leaderboard.length>10) leaderboard=leaderboard.slice(0,10);
-  localStorage.setItem("pdtLeaderboard",JSON.stringify(leaderboard));
+  if(score>=100){
+    leaderboard.push({score,date:new Date().toISOString()});
+    leaderboard.sort((a,b)=>b.score-a.score);
+    if(leaderboard.length>10) leaderboard=leaderboard.slice(0,10);
+    localStorage.setItem("pdtLeaderboard",JSON.stringify(leaderboard));
+  }
 }
 
 function updateLeaderboardDisplay(){
