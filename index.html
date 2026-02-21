@@ -2,19 +2,20 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>PizzaDayToken Snake - Twitter Only</title>
+<title>PizzaDayToken Snake - Sidebar Leaderboard</title>
 <style>
-body {margin:0; background:#111; color:white; font-family:Arial, sans-serif; display:flex; justify-content:center; gap:40px; padding-top:20px;}
+body {margin:0; background:#111; color:white; font-family:Arial, sans-serif; display:flex; justify-content:center; padding:20px;}
 #gateScreen {text-align:center; margin-bottom:20px;}
 #gateScreen button {margin:5px; padding:10px 15px; cursor:pointer; background:orange; border:none; color:white; border-radius:5px; font-size:16px;}
 #unlockBtn {background:green;}
-.game-container {position:relative; display:none;}
+.main-container {display:flex; gap:40px;}
+.game-container {position:relative;}
 canvas {background:#222; border:3px solid orange; display:block;}
 .controls {display:flex; flex-direction:column; gap:10px; position:absolute; right:-120px; top:50%; transform:translateY(-50%);}
 .arrow-btn {width:60px; height:60px; background:orange; border:none; color:white; font-size:24px; border-radius:50%; cursor:pointer; display:flex; justify-content:center; align-items:center; font-weight:bold; transition:0.1s;}
 .arrow-btn:hover {background:#ff9900; transform:scale(1.1);}
 .info-bar {text-align:center; margin-bottom:10px; color:white;}
-.leaderboard {margin-top:20px; width:300px;}
+.leaderboard {width:200px;}
 .leaderboard h2 {margin-bottom:5px;}
 .leaderboard ol {padding-left:20px;}
 button {margin-top:10px; padding:5px 10px; cursor:pointer;}
@@ -33,20 +34,24 @@ button {margin-top:10px; padding:5px 10px; cursor:pointer;}
   <button id="unlockBtn" onclick="unlockGame()" disabled>Mainkan Game</button>
 </div>
 
-<!-- Game -->
-<div class="game-container" id="gameContainer">
-  <h1>🍕 PizzaDayToken Snake</h1>
-  <div class="info-bar">Score: <span id="score">0</span> | Level: <span id="level">1</span> | Tokens: <span id="tokens">0</span></div>
-  <canvas id="game" width="600" height="600"></canvas>
-  <button id="startBtn" onclick="startGame()">Start Game</button>
+<!-- Main Container -->
+<div class="main-container" style="display:none;" id="mainContainer">
+  <!-- Game -->
+  <div class="game-container" id="gameContainer">
+    <h1>🍕 PizzaDayToken Snake</h1>
+    <div class="info-bar">Score: <span id="score">0</span> | Level: <span id="level">1</span> | Tokens: <span id="tokens">0</span></div>
+    <canvas id="game" width="600" height="600"></canvas>
+    <button id="startBtn" onclick="startGame()">Start Game</button>
 
-  <div class="controls">
-    <button class="arrow-btn" onclick="setDirection('UP')">⬆</button>
-    <button class="arrow-btn" onclick="setDirection('LEFT')">⬅</button>
-    <button class="arrow-btn" onclick="setDirection('DOWN')">⬇</button>
-    <button class="arrow-btn" onclick="setDirection('RIGHT')">➡</button>
+    <div class="controls">
+      <button class="arrow-btn" onclick="setDirection('UP')">⬆</button>
+      <button class="arrow-btn" onclick="setDirection('LEFT')">⬅</button>
+      <button class="arrow-btn" onclick="setDirection('DOWN')">⬇</button>
+      <button class="arrow-btn" onclick="setDirection('RIGHT')">➡</button>
+    </div>
   </div>
 
+  <!-- Sidebar Leaderboard -->
   <div class="leaderboard">
     <h2>Leaderboard</h2>
     <ol id="leaderboardList"></ol>
@@ -59,7 +64,7 @@ button {margin-top:10px; padding:5px 10px; cursor:pointer;}
 <audio id="bgMusic" src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" loop autoplay></audio>
 
 <script>
-// --- Social Gate (Twitter only) ---
+// --- Social Gate ---
 const twitterUrl = "https://x.com/PizzaDayT0ken";
 
 function openTwitter(){ window.open(twitterUrl,"_blank"); }
@@ -70,7 +75,7 @@ document.getElementById("confirmCheck").addEventListener("change", function(){
 
 function unlockGame(){
   document.getElementById("gateScreen").style.display="none";
-  document.getElementById("gameContainer").style.display="block";
+  document.getElementById("mainContainer").style.display="flex";
   document.getElementById("startBtn").style.display="inline-block";
 }
 
