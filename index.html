@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>PizzaDayToken Snake - Final Version</title>
+<title>PizzaDayToken Snake - Twitter Only</title>
 <style>
 body {margin:0; background:#111; color:white; font-family:Arial, sans-serif; display:flex; justify-content:center; gap:40px; padding-top:20px;}
 #gateScreen {text-align:center; margin-bottom:20px;}
@@ -25,11 +25,10 @@ button {margin-top:10px; padding:5px 10px; cursor:pointer;}
 <!-- Gate Screen -->
 <div id="gateScreen">
   <h2>🔒 Unlock Game</h2>
-  <p>Untuk main game, kamu harus:</p>
+  <p>Untuk main game, kamu harus follow Twitter:</p>
   <button onclick="openTwitter()">Follow Twitter</button>
-  <button onclick="openTelegram()">Join Telegram</button>
   <br><br>
-  <label><input type="checkbox" id="confirmCheck"> Saya sudah follow & join</label>
+  <label><input type="checkbox" id="confirmCheck"> Saya sudah follow Twitter</label>
   <br><br>
   <button id="unlockBtn" onclick="unlockGame()" disabled>Mainkan Game</button>
 </div>
@@ -60,12 +59,10 @@ button {margin-top:10px; padding:5px 10px; cursor:pointer;}
 <audio id="bgMusic" src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" loop autoplay></audio>
 
 <script>
-// --- Social Gate ---
+// --- Social Gate (Twitter only) ---
 const twitterUrl = "https://x.com/PizzaDayT0ken";
-const telegramUrl = "https://t.me/PizzaDayToken";
 
 function openTwitter(){ window.open(twitterUrl,"_blank"); }
-function openTelegram(){ window.open(telegramUrl,"_blank"); }
 
 document.getElementById("confirmCheck").addEventListener("change", function(){
   document.getElementById("unlockBtn").disabled = !this.checked;
@@ -144,7 +141,6 @@ function draw(){
     clearInterval(game); document.getElementById("dieSound").play();
     alert("Game Over! Score: "+score);
 
-    // simpan skor mulai 100 poin
     if(score>=100){
       saveScore(score);
       updateLeaderboardDisplay();
@@ -181,14 +177,16 @@ function updateLeaderboardDisplay(){
 }
 
 function convertPointsToTokens(){
-  const earnedTokens=Math.floor(score/1000);
-  if(earnedTokens>0){
-    tokens+=earnedTokens;
-    score-=earnedTokens*1000;
-    document.getElementById("tokens").innerText=tokens;
-    document.getElementById("score").innerText=score;
-    alert(`Selamat! Kamu mendapatkan ${earnedTokens} PizzadayToken!`);
-  }else{ alert("Poin belum cukup untuk ditukar. (1000 poin = 1 token)"); }
+  if(score>=100){
+    const earnedTokens = (score / 100) * 0.1;
+    tokens += earnedTokens;
+    score = 0;
+    document.getElementById("tokens").innerText = tokens.toFixed(1);
+    document.getElementById("score").innerText = score;
+    alert(`Selamat! Kamu mendapatkan ${earnedTokens.toFixed(1)} PizzadayToken!`);
+  }else{
+    alert("Poin belum cukup untuk ditukar. (Minimal 100 poin = 0.1 token)");
+  }
 }
 </script>
 
