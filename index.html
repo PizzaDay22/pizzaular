@@ -2,13 +2,13 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>PizzaDayToken Snake - Mobile Real-Time</title>
+<title>PizzaDayToken Snake - Full Version</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 body {margin:0; background:#111; color:white; font-family:Arial, sans-serif; display:flex; flex-direction:column; align-items:center; padding:10px;}
-#gateScreen {text-align:center; margin-bottom:20px;}
-#gateScreen button {margin:5px; padding:10px 15px; cursor:pointer; background:orange; border:none; color:white; border-radius:5px; font-size:16px;}
-#unlockBtn {background:green;}
+#gateScreen, #loginScreen {text-align:center; margin-bottom:20px;}
+button {margin:5px; padding:10px 15px; cursor:pointer; background:orange; border:none; color:white; border-radius:5px; font-size:16px;}
+#unlockBtn, #startBtn {background:green;}
 .main-container {display:flex; flex-direction:row; gap:20px; flex-wrap:wrap; justify-content:center;}
 .game-container {position:relative; max-width:600px;}
 canvas {background:#222; border:3px solid orange; display:block; width:100%; height:auto;}
@@ -19,13 +19,21 @@ canvas {background:#222; border:3px solid orange; display:block; width:100%; hei
 .leaderboard {min-width:200px; max-width:250px;}
 .leaderboard h2 {margin-bottom:5px;}
 .leaderboard ol {padding-left:20px;}
-button {margin-top:10px; padding:5px 10px; cursor:pointer;}
+input[type="text"]{padding:5px; width:180px; border-radius:5px; border:none;}
 </style>
 </head>
 <body>
 
-<!-- Gate Screen -->
-<div id="gateScreen">
+<!-- Login / Connect Wallet -->
+<div id="loginScreen">
+  <h2>🔑 Connect Wallet</h2>
+  <input type="text" id="playerName" placeholder="Masukkan nama / wallet">
+  <br><br>
+  <button id="loginBtn">Connect Wallet</button>
+</div>
+
+<!-- Twitter Gate -->
+<div id="gateScreen" style="display:none;">
   <h2>🔒 Unlock Game</h2>
   <p>Untuk main game, kamu harus follow Twitter:</p>
   <button onclick="openTwitter()">Follow Twitter</button>
@@ -35,9 +43,8 @@ button {margin-top:10px; padding:5px 10px; cursor:pointer;}
   <button id="unlockBtn" onclick="unlockGame()" disabled>Mainkan Game</button>
 </div>
 
-<!-- Main Container -->
+<!-- Main Game + Leaderboard -->
 <div class="main-container" style="display:none;" id="mainContainer">
-  <!-- Game -->
   <div class="game-container" id="gameContainer">
     <h1>🍕 PizzaDayToken Snake</h1>
     <div class="info-bar">Score: <span id="score">0</span> | Level: <span id="level">1</span> | Tokens: <span id="tokens">0</span></div>
@@ -52,7 +59,6 @@ button {margin-top:10px; padding:5px 10px; cursor:pointer;}
     </div>
   </div>
 
-  <!-- Sidebar Leaderboard -->
   <div class="leaderboard">
     <h2>Leaderboard</h2>
     <ol id="leaderboardList"></ol>
@@ -65,8 +71,17 @@ button {margin-top:10px; padding:5px 10px; cursor:pointer;}
 <audio id="bgMusic" src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" loop autoplay></audio>
 
 <script>
-// --- Social Gate ---
-const twitterUrl = "https://x.com/PizzaDayT0ken";
+// --- Login & Social Gate ---
+let playerName="";
+const twitterUrl="https://x.com/PizzaDayT0ken";
+
+document.getElementById("loginBtn").addEventListener("click", ()=>{
+  const inputName=document.getElementById("playerName").value.trim();
+  if(!inputName){ alert("Masukkan nama atau wallet!"); return; }
+  playerName=inputName;
+  document.getElementById("loginScreen").style.display="none";
+  document.getElementById("gateScreen").style.display="block";
+});
 
 function openTwitter(){ window.open(twitterUrl,"_blank"); }
 
@@ -81,17 +96,17 @@ function unlockGame(){
 }
 
 // --- Snake Game ---
-const canvas = document.getElementById("game");
-const ctx = canvas.getContext("2d");
-const box = 20;
-const pizzaSize = 40;
+const canvas=document.getElementById("game");
+const ctx=canvas.getContext("2d");
+const box=20;
+const pizzaSize=40;
 
 let snake, food, score, direction, speed, game, level;
 let mouthOpen=false;
 let tokens=0;
 
-// Leaderboard (localStorage)
-let leaderboard = JSON.parse(localStorage.getItem("pdtLeaderboard") || "[]");
+// Leaderboard
+let leaderboard=JSON.parse(localStorage.getItem("pdtLeaderboard") || "[]");
 updateLeaderboardDisplay();
 
 function startGame(){
@@ -101,8 +116,8 @@ function startGame(){
   document.getElementById("score").innerText=score;
   document.getElementById("level").innerText=level;
   document.getElementById("tokens").innerText=tokens;
-  const bgMusic=document.getElementById("bgMusic");
-  bgMusic.volume=0.3; bgMusic.play();
+  document.getElementById("bgMusic").volume=0.3;
+  document.getElementById("bgMusic").play();
   clearInterval(game);
   game=setInterval(draw,speed);
 }
@@ -122,7 +137,7 @@ window.addEventListener("keydown", e=>{
   if(e.key==="ArrowDown"&&direction!=="UP") direction="DOWN";
 });
 
-// Touch support for mobile swipe (optional)
+// Mobile swipe
 let touchStartX=0, touchStartY=0;
 canvas.addEventListener("touchstart", e=>{ const t=e.touches[0]; touchStartX=t.clientX; touchStartY=t.clientY; });
 canvas.addEventListener("touchend", e=>{
@@ -159,10 +174,7 @@ function draw(){
   if(headX<0||headX>=canvas.width||headY<0||headY>=canvas.height||snake.some(seg=>seg.x===headX&&seg.y===headY)){
     clearInterval(game); document.getElementById("dieSound").play();
     alert("Game Over! Score: "+score);
-    if(score>=100){
-      saveScore(score);
-      updateLeaderboardDisplay();
-    }
+    if(score>=100){ saveScore(score); updateLeaderboardDisplay(); }
     return;
   }
 
@@ -177,22 +189,16 @@ function draw(){
     setTimeout(()=>{ mouthOpen=false; },200);
   }else{ mouthOpen=false; snake.pop(); }
 
-  // Update leaderboard in real-time
+  // real-time update leaderboard
   if(score>=100){ saveScore(score); updateLeaderboardDisplay(); }
 }
 
 // --- Leaderboard & Token ---
 function saveScore(score){
-  // Cek kalau sudah ada, update hanya jika skor lebih tinggi
-  let updated=false;
-  for(let i=0;i<leaderboard.length;i++){
-    if(leaderboard[i].score<score){
-      leaderboard[i].score=score;
-      leaderboard[i].date=new Date().toISOString();
-      updated=true; break;
-    }
-  }
-  if(!updated && leaderboard.length<10){ leaderboard.push({score,date:new Date().toISOString()}); }
+  const entryIndex=leaderboard.findIndex(e=>e.name===playerName);
+  if(entryIndex>=0){
+    if(score>leaderboard[entryIndex].score){ leaderboard[entryIndex].score=score; leaderboard[entryIndex].date=new Date().toISOString(); }
+  }else{ leaderboard.push({name:playerName,score, date:new Date().toISOString()}); }
   leaderboard.sort((a,b)=>b.score-a.score);
   if(leaderboard.length>10) leaderboard=leaderboard.slice(0,10);
   localStorage.setItem("pdtLeaderboard",JSON.stringify(leaderboard));
@@ -201,22 +207,21 @@ function saveScore(score){
 function updateLeaderboardDisplay(){
   const list=document.getElementById("leaderboardList");
   list.innerHTML="";
-  leaderboard.forEach(item=>{ list.innerHTML+=`<li>${item.score} pts</li>`; });
+  leaderboard.forEach(item=>{ list.innerHTML+=`<li>${item.name} — ${item.score} pts</li>`; });
 }
 
 function convertPointsToTokens(){
   if(score>=100){
-    const earnedTokens = (score / 100) * 0.1;
-    tokens += earnedTokens;
-    score = 0;
-    document.getElementById("tokens").innerText = tokens.toFixed(1);
-    document.getElementById("score").innerText = score;
+    const earnedTokens=(score/100)*0.1;
+    tokens+=earnedTokens;
+    score=0;
+    document.getElementById("tokens").innerText=tokens.toFixed(1);
+    document.getElementById("score").innerText=score;
     alert(`Selamat! Kamu mendapatkan ${earnedTokens.toFixed(1)} PizzadayToken!`);
   }else{
     alert("Poin belum cukup untuk ditukar. (Minimal 100 poin = 0.1 token)");
   }
 }
 </script>
-
 </body>
 </html>
