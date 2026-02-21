@@ -6,9 +6,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 body {margin:0; background:#111; color:white; font-family:Arial, sans-serif; display:flex; flex-direction:column; align-items:center; padding:10px;}
-#gateScreen, #loginScreen {text-align:center; margin-bottom:20px;}
+#loginScreen {text-align:center; margin-bottom:20px;}
 button {margin:5px; padding:10px 15px; cursor:pointer; background:orange; border:none; color:white; border-radius:5px; font-size:16px;}
-#unlockBtn, #startBtn {background:green;}
+#startBtn {background:green;}
 .main-container {display:flex; flex-direction:row; gap:20px; flex-wrap:wrap; justify-content:center;}
 .game-container {position:relative; max-width:600px;}
 canvas {background:#222; border:3px solid orange; display:block; width:100%; height:auto;}
@@ -29,18 +29,7 @@ input[type="text"]{padding:5px; width:180px; border-radius:5px; border:none;}
   <h2>🔑 Connect Wallet</h2>
   <input type="text" id="playerName" placeholder="Masukkan nama / wallet">
   <br><br>
-  <button id="loginBtn">Connect Wallet</button>
-</div>
-
-<!-- Twitter Gate -->
-<div id="gateScreen" style="display:none;">
-  <h2>🔒 Unlock Game</h2>
-  <p>Untuk main game, kamu harus follow Twitter:</p>
-  <button onclick="openTwitter()">Follow Twitter</button>
-  <br><br>
-  <label><input type="checkbox" id="confirmCheck"> Saya sudah follow Twitter</label>
-  <br><br>
-  <button id="unlockBtn" onclick="unlockGame()" disabled>Mainkan Game</button>
+  <button id="loginBtn">Connect Wallet & Play</button>
 </div>
 
 <!-- Main Game + Leaderboard -->
@@ -71,35 +60,21 @@ input[type="text"]{padding:5px; width:180px; border-radius:5px; border:none;}
 <audio id="bgMusic" src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" loop autoplay></audio>
 
 <script>
-// --- Login & Social Gate ---
+// --- Login ---
 let playerName="";
-const twitterUrl="https://x.com/PizzaDayT0ken";
-
 document.getElementById("loginBtn").addEventListener("click", ()=>{
   const inputName=document.getElementById("playerName").value.trim();
   if(!inputName){ alert("Masukkan nama atau wallet!"); return; }
   playerName=inputName;
   document.getElementById("loginScreen").style.display="none";
-  document.getElementById("gateScreen").style.display="block";
-});
-
-function openTwitter(){ window.open(twitterUrl,"_blank"); }
-
-document.getElementById("confirmCheck").addEventListener("change", function(){
-  document.getElementById("unlockBtn").disabled = !this.checked;
-});
-
-function unlockGame(){
-  document.getElementById("gateScreen").style.display="none";
   document.getElementById("mainContainer").style.display="flex";
-  document.getElementById("startBtn").style.display="inline-block";
-}
+});
 
 // --- Snake Game ---
 const canvas=document.getElementById("game");
 const ctx=canvas.getContext("2d");
 const box=20;
-const pizzaSize=40;
+const pizzaSize=30; // pizza lebih kecil sekarang
 
 let snake, food, score, direction, speed, game, level;
 let mouthOpen=false;
@@ -189,7 +164,6 @@ function draw(){
     setTimeout(()=>{ mouthOpen=false; },200);
   }else{ mouthOpen=false; snake.pop(); }
 
-  // real-time update leaderboard
   if(score>=100){ saveScore(score); updateLeaderboardDisplay(); }
 }
 
