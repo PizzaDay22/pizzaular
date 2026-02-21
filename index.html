@@ -2,20 +2,21 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>PizzaDayToken Snake - Sidebar Leaderboard</title>
+<title>PizzaDayToken Snake - Mobile Real-Time</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-body {margin:0; background:#111; color:white; font-family:Arial, sans-serif; display:flex; justify-content:center; padding:20px;}
+body {margin:0; background:#111; color:white; font-family:Arial, sans-serif; display:flex; flex-direction:column; align-items:center; padding:10px;}
 #gateScreen {text-align:center; margin-bottom:20px;}
 #gateScreen button {margin:5px; padding:10px 15px; cursor:pointer; background:orange; border:none; color:white; border-radius:5px; font-size:16px;}
 #unlockBtn {background:green;}
-.main-container {display:flex; gap:40px;}
-.game-container {position:relative;}
-canvas {background:#222; border:3px solid orange; display:block;}
-.controls {display:flex; flex-direction:column; gap:10px; position:absolute; right:-120px; top:50%; transform:translateY(-50%);}
+.main-container {display:flex; flex-direction:row; gap:20px; flex-wrap:wrap; justify-content:center;}
+.game-container {position:relative; max-width:600px;}
+canvas {background:#222; border:3px solid orange; display:block; width:100%; height:auto;}
+.controls {display:flex; flex-wrap:wrap; gap:10px; margin-top:10px; justify-content:center;}
 .arrow-btn {width:60px; height:60px; background:orange; border:none; color:white; font-size:24px; border-radius:50%; cursor:pointer; display:flex; justify-content:center; align-items:center; font-weight:bold; transition:0.1s;}
 .arrow-btn:hover {background:#ff9900; transform:scale(1.1);}
 .info-bar {text-align:center; margin-bottom:10px; color:white;}
-.leaderboard {width:200px;}
+.leaderboard {min-width:200px; max-width:250px;}
 .leaderboard h2 {margin-bottom:5px;}
 .leaderboard ol {padding-left:20px;}
 button {margin-top:10px; padding:5px 10px; cursor:pointer;}
@@ -89,7 +90,7 @@ let snake, food, score, direction, speed, game, level;
 let mouthOpen=false;
 let tokens=0;
 
-// Leaderboard
+// Leaderboard (localStorage)
 let leaderboard = JSON.parse(localStorage.getItem("pdtLeaderboard") || "[]");
 updateLeaderboardDisplay();
 
@@ -121,6 +122,19 @@ window.addEventListener("keydown", e=>{
   if(e.key==="ArrowDown"&&direction!=="UP") direction="DOWN";
 });
 
+// Touch support for mobile swipe (optional)
+let touchStartX=0, touchStartY=0;
+canvas.addEventListener("touchstart", e=>{ const t=e.touches[0]; touchStartX=t.clientX; touchStartY=t.clientY; });
+canvas.addEventListener("touchend", e=>{
+  const t=e.changedTouches[0];
+  const dx=t.clientX-touchStartX, dy=t.clientY-touchStartY;
+  if(Math.abs(dx)>Math.abs(dy)){
+    if(dx>0) setDirection("RIGHT"); else setDirection("LEFT");
+  }else{
+    if(dy>0) setDirection("DOWN"); else setDirection("UP");
+  }
+});
+
 function randomFood(){
   const maxX=canvas.width/box; const maxY=canvas.height/box;
   return {x:Math.floor(Math.random()*maxX)*box, y:Math.floor(Math.random()*maxY)*box};
@@ -145,7 +159,6 @@ function draw(){
   if(headX<0||headX>=canvas.width||headY<0||headY>=canvas.height||snake.some(seg=>seg.x===headX&&seg.y===headY)){
     clearInterval(game); document.getElementById("dieSound").play();
     alert("Game Over! Score: "+score);
-
     if(score>=100){
       saveScore(score);
       updateLeaderboardDisplay();
@@ -163,16 +176,26 @@ function draw(){
     if(score%50===0){ level+=1; document.getElementById("level").innerText=level; }
     setTimeout(()=>{ mouthOpen=false; },200);
   }else{ mouthOpen=false; snake.pop(); }
+
+  // Update leaderboard in real-time
+  if(score>=100){ saveScore(score); updateLeaderboardDisplay(); }
 }
 
 // --- Leaderboard & Token ---
 function saveScore(score){
-  if(score>=100){
-    leaderboard.push({score,date:new Date().toISOString()});
-    leaderboard.sort((a,b)=>b.score-a.score);
-    if(leaderboard.length>10) leaderboard=leaderboard.slice(0,10);
-    localStorage.setItem("pdtLeaderboard",JSON.stringify(leaderboard));
+  // Cek kalau sudah ada, update hanya jika skor lebih tinggi
+  let updated=false;
+  for(let i=0;i<leaderboard.length;i++){
+    if(leaderboard[i].score<score){
+      leaderboard[i].score=score;
+      leaderboard[i].date=new Date().toISOString();
+      updated=true; break;
+    }
   }
+  if(!updated && leaderboard.length<10){ leaderboard.push({score,date:new Date().toISOString()}); }
+  leaderboard.sort((a,b)=>b.score-a.score);
+  if(leaderboard.length>10) leaderboard=leaderboard.slice(0,10);
+  localStorage.setItem("pdtLeaderboard",JSON.stringify(leaderboard));
 }
 
 function updateLeaderboardDisplay(){
